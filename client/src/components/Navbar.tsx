@@ -133,6 +133,14 @@ const Navbar: React.FC = () => {
                     </div>
                     
                     <Link
+                      to="/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      My Dashboard
+                    </Link>
+                    
+                    <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition-colors"
                       onClick={() => setShowProfileMenu(false)}
@@ -140,9 +148,9 @@ const Navbar: React.FC = () => {
                       Profile Settings
                     </Link>
                     
-                    {user.isAdmin && (
+                    {(user.isAdmin || user.role === 'admin' || user.role === 'super_admin') && (
                       <Link
-                        to="/admin"
+                        to="/admin/dashboard"
                         className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition-colors"
                         onClick={() => setShowProfileMenu(false)}
                       >

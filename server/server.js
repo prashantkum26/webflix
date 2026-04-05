@@ -9,6 +9,9 @@ import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
 import movieRoutes from './routes/movies.js';
 import userRoutes from './routes/users.js';
+import adminRoutes from './routes/admin.js';
+import analyticsRoutes from './routes/analytics.js';
+import settingsRoutes from './routes/settings.js';
 
 // Load environment variables
 dotenv.config();
@@ -65,16 +68,22 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Root route
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Welcome to WebFlix API',
-    version: '1.0.0',
+    version: '2.0.0',
     endpoints: {
       auth: '/api/auth',
       movies: '/api/movies',
       users: '/api/users',
+      admin: '/api/admin',
+      analytics: '/api/analytics',
+      settings: '/api/settings',
       health: '/api/health'
     }
   });

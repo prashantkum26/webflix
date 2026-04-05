@@ -212,15 +212,7 @@ const handleModalMouseLeave = () => {
         {/* Featured Movies */}
         <div className="bg-netflix-black/80 p-8 rounded-lg">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-white">Featured Movies</h2>
-            {!loading && allMovies.length === 0 && (
-              <a 
-                href="/admin/upload" 
-                className="bg-netflix-red text-white px-4 py-2 rounded text-sm hover:bg-red-600 transition-colors"
-              >
-                Upload First Movie
-              </a>
-            )}
+            <h2 className="text-2xl font-bold text-white">Featured Movies</h2>            
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {renderMovieCards(movies.featured.length > 0 ? movies.featured : allMovies)}

@@ -39,11 +39,70 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// Admin middleware
+// Admin middleware (legacy - checks only isAdmin flag)
 export const admin = (req, res, next) => {
   if (req.user && req.user.isAdmin) {
     next();
   } else {
     res.status(403).json({ message: 'Not authorized as an admin' });
+  }
+};
+
+// Enhanced admin middleware (checks role-based access)
+export const adminOnly = (req, res, next) => {
+  if (req.user && req.user.hasAdminAccess()) {
+    next();
+  } else {
+    res.status(403).json({ 
+      success: false,
+      message: 'Access denied. Administrative privileges required.' 
+    });
+  }
+};
+
+// Permission-based middleware factory
+export const requirePermission = (permission) => {
+  return (req, res, next) => {
+    if (req.user && req.user.hasPermission(permission)) {
+      next();
+    } else {
+      res.status(403).json({ 
+        success: false,
+        message: `Access denied. Required permission: ${permission}` 
+      });
+    }
+  };
+};
+
+// Role-based middleware factory
+export const requireRole = (roles) => {
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
+  
+  return (req, res, next) => {
+    if (req.user && allowedRoles.includes(req.user.role)) {
+      next();
+    } else {
+      res.status(403).json({ 
+        success: false,
+        message: `Access denied. Required role: ${allowedRoles.join(' or ')}` 
+      });
+    }
+  };
+};
+
+// Middleware to track user login activity
+export const trackLogin = async (req, res, next) => {
+  try {
+    if (req.user) {
+      // Update last login and increment login count
+      req.user.lastLogin = new Date();
+      req.user.loginCount = (req.user.loginCount || 0) + 1;
+      await req.user.save();
+    }
+    next();
+  } catch (error) {
+    console.error('Error tracking login:', error);
+    // Don't block request if tracking fails
+    next();
   }
 };

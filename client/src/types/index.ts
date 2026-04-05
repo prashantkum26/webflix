@@ -4,6 +4,43 @@ export interface User {
   email: string;
   myList: string[];
   isAdmin: boolean;
+  role?: 'user' | 'moderator' | 'admin' | 'super_admin';
+  permissions?: string[];
+  avatar?: string;
+  dateOfBirth?: string;
+  country?: string;
+  language?: string;
+  preferences?: {
+    autoplay: boolean;
+    autoplayTrailers: boolean;
+    previewOnHover: boolean;
+    hoverDelay: number;
+    preferredVideoQuality: 'auto' | '480p' | '720p' | '1080p' | '4K';
+    dataUsageMode: 'low' | 'medium' | 'high' | 'auto';
+    preferredAudioLanguage: string;
+    preferredSubtitleLanguage?: string;
+    subtitlesEnabled: boolean;
+    emailNotifications: {
+      newReleases: boolean;
+      recommendations: boolean;
+      accountUpdates: boolean;
+      promotions: boolean;
+    };
+    profileVisibility: 'public' | 'private' | 'friends';
+    shareWatchHistory: boolean;
+    allowRecommendations: boolean;
+  };
+  continueWatching?: Array<{
+    movie: string;
+    watchTime: number;
+    totalDuration: number;
+    watchPercentage: number;
+    lastWatched: string;
+  }>;
+  lastLogin?: string;
+  loginCount?: number;
+  isActive?: boolean;
+  isVerified?: boolean;
   token?: string;
 }
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { uploadMovie } from '../services/api';
+import AdminNav from '../components/admin/AdminNav';
 
 interface MovieFormData {
   title: string;
@@ -88,10 +89,12 @@ const AdminUpload: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-netflix-black pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
-          <div className="mb-8">
+    <div className="min-h-screen bg-netflix-black">
+      <AdminNav />
+      <div className="pt-20 pb-12">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+            <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Upload New Movie</h1>
             <p className="text-gray-400">Add a new movie to the WebFlix catalog</p>
           </div>
@@ -340,6 +343,7 @@ const AdminUpload: React.FC = () => {
               </button>
             </div>
           </form>
+          </div>
         </div>
       </div>
     </div>

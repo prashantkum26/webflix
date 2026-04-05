@@ -2,15 +2,23 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import UserDashboard from './pages/UserDashboard';
 import AdminUpload from './pages/AdminUpload';
 import VideoPlayer from './pages/VideoPlayer';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import Profile from './pages/Profile';
+import MyList from './pages/MyList';
+import Downloads from './pages/Downloads';
+import UserManagement from './pages/admin/UserManagement';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
+import ContentManagement from './pages/admin/ContentManagement';
+import SystemSettings from './pages/admin/SystemSettings';
 // import Movies from './pages/Movies';
 // import MovieDetails from './pages/MovieDetails';
-// import MyList from './pages/MyList';
-// import Profile from './pages/Profile';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -87,13 +95,63 @@ function AppContent() {
           } 
         />
         
-        {/* Admin Routes */}
+        {/* User Dashboard Route */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <RoleProtectedRoute allowedRoles={['user', 'moderator', 'admin', 'super_admin']}>
+              <UserDashboard />
+            </RoleProtectedRoute>
+          } 
+        />
+
+        {/* Admin Routes - Restricted to admin roles only */}
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'super_admin']}>
+              <AdminDashboard />
+            </RoleProtectedRoute>
+          } 
+        />
         <Route 
           path="/admin/upload" 
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['admin', 'super_admin']}>
               <AdminUpload />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/users" 
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'super_admin']}>
+              <UserManagement />
+            </RoleProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/analytics" 
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'super_admin']}>
+              <AnalyticsDashboard />
+            </RoleProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/content" 
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'super_admin']}>
+              <ContentManagement />
+            </RoleProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/settings" 
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'super_admin']}>
+              <SystemSettings />
+            </RoleProtectedRoute>
           } 
         />
         
@@ -103,6 +161,36 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <VideoPlayer />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Profile Route */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* My List Route */}
+        <Route 
+          path="/my-list" 
+          element={
+            <ProtectedRoute>
+              <MyList />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Downloads Route */}
+        <Route 
+          path="/downloads" 
+          element={
+            <ProtectedRoute>
+              <Downloads />
             </ProtectedRoute>
           } 
         />
@@ -122,22 +210,6 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <MovieDetails />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/my-list" 
-          element={
-            <ProtectedRoute>
-              <MyList />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <Profile />
             </ProtectedRoute>
           } 
         />
