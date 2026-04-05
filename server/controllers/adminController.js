@@ -3,6 +3,7 @@ import Movie from '../models/Movie.js';
 import WatchHistory from '../models/WatchHistory.js';
 import Subscription from '../models/Subscription.js';
 import Settings from '../models/Settings.js';
+import { deleteMovieFiles } from '../config/s3.js';
 import jwt from 'jsonwebtoken';
 
 // Admin Dashboard Overview
@@ -416,33 +417,63 @@ export const updateMovie = async (req, res) => {
 };
 
 export const deleteMovie = async (req, res) => {
+  console.log('🔥 ================== ADMIN DELETE ROUTE CALLED ==================');
+  console.log(`📝 Admin delete request for movie ID: ${req.params.movieId}`);
+  console.log(`👤 Admin User: ${req.user ? req.user.name || req.user.email : 'Not authenticated'}`);
+
   try {
     const { movieId } = req.params;
     
-    const movie = await Movie.findByIdAndDelete(movieId);
+    console.log('🔍 Finding movie in database...');
+    const movie = await Movie.findById(movieId);
     
     if (!movie) {
+      console.log('❌ Movie not found in database');
       return res.status(404).json({
         success: false,
         message: 'Movie not found'
       });
     }
+
+    console.log(`✅ Movie found: ${movie.title}`);
+    console.log('🗑️ Starting S3 cleanup process...');
+    
+    // Delete S3 files first
+    const s3DeleteResult = await deleteMovieFiles(movie);
+    console.log('📊 S3 cleanup result:', s3DeleteResult);
+    
+    // Delete movie from database
+    console.log('🗄️ Deleting movie from database...');
+    await Movie.findByIdAndDelete(movieId);
     
     // Delete related watch history
+    console.log('📈 Cleaning up watch history...');
     await WatchHistory.deleteMany({ movie: movieId });
     
     // Remove from user lists
+    console.log('👥 Removing from user lists...');
     await User.updateMany(
       { myList: movieId },
       { $pull: { myList: movieId } }
     );
     
+    console.log('✅ Admin delete completed successfully');
+    console.log('🔥 ================== ADMIN DELETE ROUTE END ==================');
+
     res.json({
       success: true,
-      message: 'Movie deleted successfully'
+      message: 'Movie and associated files deleted successfully',
+      data: {
+        movieId: movie._id,
+        title: movie.title,
+        s3FilesDeleted: s3DeleteResult.deletedCount || 0,
+        s3Errors: s3DeleteResult.errors || []
+      }
     });
   } catch (error) {
-    console.error('Delete movie error:', error);
+    console.error('❌ Admin delete movie error:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.log('🔥 ================== ADMIN DELETE ROUTE END (ERROR) ==================');
     res.status(500).json({
       success: false,
       message: 'Error deleting movie',
@@ -493,6 +524,9 @@ export const bulkUpdateMovies = async (req, res) => {
 };
 
 export const bulkDeleteMovies = async (req, res) => {
+  console.log('🔥 ================== ADMIN BULK DELETE CALLED ==================');
+  console.log(`👤 Admin User: ${req.user ? req.user.name || req.user.email : 'Not authenticated'}`);
+
   try {
     const { movieIds } = req.body;
     
@@ -502,28 +536,67 @@ export const bulkDeleteMovies = async (req, res) => {
         message: 'Movie IDs array is required'
       });
     }
+
+    console.log(`🗑️ Bulk deleting ${movieIds.length} movies via admin route`);
+
+    // Fetch movies first to get S3 files
+    console.log('🔍 Fetching movies for S3 cleanup...');
+    const moviesToDelete = await Movie.find({ _id: { $in: movieIds } });
     
-    // Delete movies
+    if (moviesToDelete.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No movies found to delete'
+      });
+    }
+
+    console.log(`📊 Found ${moviesToDelete.length} movies to delete`);
+
+    // Delete S3 files for all movies
+    let totalS3FilesDeleted = 0;
+    let totalS3Errors = [];
+    
+    for (const movie of moviesToDelete) {
+      console.log(`🗑️ Processing S3 cleanup for: ${movie.title}`);
+      const s3Result = await deleteMovieFiles(movie);
+      totalS3FilesDeleted += s3Result.deletedCount || 0;
+      if (s3Result.errors && s3Result.errors.length > 0) {
+        totalS3Errors.push(...s3Result.errors);
+      }
+    }
+    
+    // Delete movies from database
+    console.log('🗄️ Deleting movies from database...');
     const result = await Movie.deleteMany({ _id: { $in: movieIds } });
     
     // Delete related watch history
+    console.log('📈 Cleaning up watch history...');
     await WatchHistory.deleteMany({ movie: { $in: movieIds } });
     
     // Remove from user lists
+    console.log('👥 Removing from user lists...');
     await User.updateMany(
       { myList: { $in: movieIds } },
       { $pullAll: { myList: movieIds } }
     );
+
+    console.log('✅ Admin bulk delete completed');
+    console.log(`📊 Summary: ${result.deletedCount} movies, ${totalS3FilesDeleted} S3 files`);
+    console.log('🔥 ================== ADMIN BULK DELETE END ==================');
     
     res.json({
       success: true,
-      message: `${result.deletedCount} movies deleted successfully`,
+      message: `${result.deletedCount} movies and ${totalS3FilesDeleted} associated files deleted successfully`,
       data: {
-        deletedCount: result.deletedCount
+        deletedCount: result.deletedCount,
+        s3FilesDeleted: totalS3FilesDeleted,
+        s3Errors: totalS3Errors
       }
     });
   } catch (error) {
-    console.error('Bulk delete error:', error);
+    console.error('❌ Admin bulk delete error:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.log('🔥 ================== ADMIN BULK DELETE END (ERROR) ==================');
     res.status(500).json({
       success: false,
       message: 'Error deleting movies',

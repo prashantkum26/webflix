@@ -3,7 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import connectDB from './config/database.js';
+import { logS3Configuration } from './config/s3.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -15,6 +17,11 @@ import settingsRoutes from './routes/settings.js';
 
 // Load environment variables
 dotenv.config();
+
+// Log S3 configuration on startup
+console.log('🔄 Starting WebFlix Server...');
+console.log('📋 Checking S3 Configuration...');
+logS3Configuration();
 
 // Connect to database
 connectDB();
@@ -57,10 +64,14 @@ app.use('/uploads', express.static('uploads'));
 
 // Health check route
 app.get('/api/health', (req, res) => {
+  console.log('🏥 Health check endpoint called at:', new Date().toISOString());
+  console.log('📊 Testing console.log functionality - THIS SHOULD APPEAR IN TERMINAL');
+  
   res.json({ 
     success: true, 
     message: 'WebFlix API is running!',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    consoleTest: 'Check your terminal for console logs!'
   });
 });
 
@@ -131,7 +142,10 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+// Create HTTP server for Socket.IO
+const httpServer = createServer(app);
+
+const server = httpServer.listen(PORT, () => {
   console.log(`🚀 WebFlix Server running on port ${PORT}`);
   console.log(`📖 API Documentation available at http://localhost:${PORT}`);
   console.log(`🏥 Health check at http://localhost:${PORT}/api/health`);
